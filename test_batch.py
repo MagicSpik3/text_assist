@@ -2,9 +2,10 @@
 
 import unittest
 import json
-from unittest.mock import patch, mock_open, MagicMock # Added MagicMock
-import tempfile # For creating temporary files/directories
+from unittest.mock import patch, mock_open, MagicMock
+import tempfile
 from pathlib import Path
+import io # <--- Ensure io is imported at the top
 
 import pandas as pd
 import toml
@@ -65,7 +66,7 @@ class TestBatchProcessing(unittest.TestCase):
             with self.assertRaises(toml.TomlDecodeError):
                 load_config("invalid_config.toml")
 
-    @patch("pandas.read_csv")
+    @patch("pandas.read_csv") # This patches pd.read_csv globally for this test
     def test_read_sic_data_success(self, mock_pd_read_csv):
         """Test reading SIC data successfully."""
         mock_df = pd.DataFrame({"unique_id": ["id1"], "sic_ind1": ["Ind1_1"]})
@@ -148,17 +149,21 @@ class TestBatchProcessing(unittest.TestCase):
         self.assertTrue("HTTP Error" in result["error"])
 
 
-    @patch("scripts.batch.pd.read_csv")
+    @patch("scripts.batch.pd.read_csv") # Patch where it's used in the SCRIPT
     @patch("scripts.batch.process_row")
     @patch("builtins.open", new_callable=mock_open)
-    @patch("scripts.batch.time.sleep") # Mock time.sleep to speed up tests
+    @patch("scripts.batch.time.sleep")
     def test_process_test_set_test_mode(self, mock_sleep, mock_file_open, mock_process_row, mock_pd_read_csv):
         """Test process_test_set in test mode."""
-        # Create a dummy DataFrame for pd.read_csv to return
-        sample_input_df = pd.read_csv(io.StringIO(SAMPLE_CSV_DATA)) # Use io.StringIO
+        # --- FIX: Create sample_input_df without calling the mocked pd.read_csv ---
+        csv_lines = SAMPLE_CSV_DATA.strip().split('\n')
+        header = csv_lines[0].split(',')
+        data_rows = [row.split(',') for row in csv_lines[1:]]
+        sample_input_df = pd.DataFrame(data_rows, columns=header)
+        # --- End FIX ---
+
         mock_pd_read_csv.return_value = sample_input_df
 
-        # Define what process_row should return
         mock_process_row.return_value = {"unique_id": "mock_id", "processed": True}
 
         test_limit = 2
@@ -170,24 +175,29 @@ class TestBatchProcessing(unittest.TestCase):
             test_limit=test_limit
         )
 
+        # This assertion should now pass as pd.read_csv is only called once by process_test_set
         mock_pd_read_csv.assert_called_once_with("dummy_input.csv", delimiter=",", dtype=str)
         self.assertEqual(mock_process_row.call_count, test_limit)
         mock_file_open.assert_called_once_with("dummy_output.jsonl", "a", encoding="utf-8")
-        # Check if write was called for each processed row
         self.assertEqual(mock_file_open().write.call_count, test_limit)
-        # Check content of one of the writes
         expected_json_output = json.dumps({"unique_id": "mock_id", "processed": True}) + "\n"
         mock_file_open().write.assert_any_call(expected_json_output)
         self.assertEqual(mock_sleep.call_count, test_limit)
 
 
-    @patch("scripts.batch.pd.read_csv")
+    @patch("scripts.batch.pd.read_csv") # Patch where it's used in the SCRIPT
     @patch("scripts.batch.process_row")
     @patch("builtins.open", new_callable=mock_open)
     @patch("scripts.batch.time.sleep")
     def test_process_test_set_full_mode(self, mock_sleep, mock_file_open, mock_process_row, mock_pd_read_csv):
         """Test process_test_set in full mode (not test_mode)."""
-        sample_input_df = pd.read_csv(io.StringIO(SAMPLE_CSV_DATA)) # Use io.StringIO
+        # --- FIX: Create sample_input_df without calling the mocked pd.read_csv ---
+        csv_lines = SAMPLE_CSV_DATA.strip().split('\n')
+        header = csv_lines[0].split(',')
+        data_rows = [row.split(',') for row in csv_lines[1:]]
+        sample_input_df = pd.DataFrame(data_rows, columns=header)
+        # --- End FIX ---
+
         mock_pd_read_csv.return_value = sample_input_df
         mock_process_row.return_value = {"unique_id": "mock_id", "processed": True}
 
@@ -197,21 +207,20 @@ class TestBatchProcessing(unittest.TestCase):
             secret_code="test_secret",
             csv_filepath="dummy_input.csv",
             output_filepath="dummy_output.jsonl",
-            test_mode=False # Full mode
-            # test_limit is ignored when test_mode is False
+            test_mode=False
         )
 
+        # This assertion should now pass
+        mock_pd_read_csv.assert_called_once_with("dummy_input.csv", delimiter=",", dtype=str)
         self.assertEqual(mock_process_row.call_count, num_rows_in_sample)
         self.assertEqual(mock_file_open().write.call_count, num_rows_in_sample)
         self.assertEqual(mock_sleep.call_count, num_rows_in_sample)
 
     @patch("scripts.batch.pd.read_csv", side_effect=FileNotFoundError)
-    @patch("scripts.batch.process_row") # To check it's not called
-    @patch("builtins.open") # To check it's not called
+    @patch("scripts.batch.process_row")
+    @patch("builtins.open")
     def test_process_test_set_input_file_not_found(self, mock_file_open, mock_process_row, mock_pd_read_csv):
         """Test process_test_set when input CSV is not found."""
-        # No need to call with self.assertRaises as the function handles it internally (logs error)
-        # We just check that subsequent operations are not performed.
         process_test_set(
             secret_code="test_secret",
             csv_filepath="non_existent.csv",
@@ -226,5 +235,5 @@ class TestBatchProcessing(unittest.TestCase):
 
 if __name__ == "__main__":
     # Import io for StringIO if not already at top level
-    import io
+    # import io # Not strictly needed if we parse SAMPLE_CSV_DATA manually
     unittest.main()
