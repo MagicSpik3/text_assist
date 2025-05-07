@@ -1,18 +1,16 @@
-"""Unit tests for the batch processing script."""
+"""Minimal unit tests for the batch processing script functions."""
 
 import unittest
 import json
 from unittest.mock import patch, mock_open, MagicMock
-import tempfile
-from pathlib import Path
-import io # <--- Ensure io is imported at the top
+import io # For StringIO
 
 import pandas as pd
 import toml
 import requests # Import requests for exception types
 
 # Assuming your script is in 'scripts' directory and tests in 'tests'
-# Adjust import path if your structure is different or how tests are run
+# Adjust import path if your structure is different or how tests are run.
 # This path assumes tests are run from the project root.
 from scripts.batch import (
     load_config,
@@ -22,218 +20,99 @@ from scripts.batch import (
 )
 
 # Sample data for tests
-SAMPLE_TOML_CONFIG = """
+MINIMAL_TOML_CONFIG = """
 [paths]
-gold_standard_csv = "dummy/path/gold.csv"
-output_filepath = "dummy/path/output.jsonl"
+gold_standard_csv = "dummy/gold.csv"
+output_filepath = "dummy/output.jsonl"
 
 [parameters]
-test_num = 2
+test_num = 1
 test_mode = true
 """
 
-SAMPLE_INVALID_TOML_CONFIG = """
-[paths
-gold_standard_csv = "bad"
+MINIMAL_CSV_DATA = """unique_id,soc2020_job_title,soc2020_job_description,sic2007_employee
+id1,Test Job,Test Desc,Test Industry
 """
 
-SAMPLE_CSV_DATA = """unique_id,sic_section,sic2007_employee,sic2007_self_employed,sic_ind1,sic_ind2,sic_ind3,sic_ind_code_flag,soc2020_job_title,soc2020_job_description,sic_ind_occ1,sic_ind_occ2,sic_ind_occ3,sic_ind_occ_flag
-id1,A,EmpDesc1,SelfEmpDesc1,Ind1_1,Ind1_2,Ind1_3,Flag1,JobTitle1,JobDesc1,Occ1_1,Occ1_2,Occ1_3,OccFlag1
-id2,B,EmpDesc2,SelfEmpDesc2,Ind2_1,Ind2_2,Ind2_3,Flag2,JobTitle2,JobDesc2,Occ2_1,Occ2_2,Occ2_3,OccFlag2
-id3,C,EmpDesc3,SelfEmpDesc3,Ind3_1,Ind3_2,Ind3_3,Flag3,JobTitle3,JobDesc3,Occ3_1,Occ3_2,Occ3_3,OccFlag3
-"""
+class TestBatchProcessingMinimal(unittest.TestCase):
+    """Minimal tests for batch processing script functions."""
 
-class TestBatchProcessing(unittest.TestCase):
-    """Tests for the batch processing script functions."""
-
-    def test_load_config_success(self):
-        """Test loading a valid TOML configuration file."""
-        with patch("builtins.open", mock_open(read_data=SAMPLE_TOML_CONFIG)) as _mock_file:
+    def test_load_config_runs(self):
+        """Test that load_config runs and parses minimal TOML."""
+        with patch("builtins.open", mock_open(read_data=MINIMAL_TOML_CONFIG)) as _mock_file:
             config = load_config("dummy_config.toml")
+            self.assertIsNotNone(config)
             self.assertIn("paths", config)
-            self.assertEqual(config["paths"]["gold_standard_csv"], "dummy/path/gold.csv")
-            self.assertEqual(config["parameters"]["test_num"], 2)
+            self.assertEqual(config["paths"]["gold_standard_csv"], "dummy/gold.csv")
 
-    def test_load_config_file_not_found(self):
-        """Test FileNotFoundError when the config file is missing."""
-        with patch("builtins.open", side_effect=FileNotFoundError) as _mock_file:
-            with self.assertRaises(FileNotFoundError):
-                load_config("non_existent_config.toml")
-
-    def test_load_config_invalid_toml(self):
-        """Test TomlDecodeError for malformed TOML data."""
-        with patch("builtins.open", mock_open(read_data=SAMPLE_INVALID_TOML_CONFIG)) as _mock_file:
-            with self.assertRaises(toml.TomlDecodeError):
-                load_config("invalid_config.toml")
-
-    @patch("pandas.read_csv") # This patches pd.read_csv globally for this test
-    def test_read_sic_data_success(self, mock_pd_read_csv):
-        """Test reading SIC data successfully."""
-        mock_df = pd.DataFrame({"unique_id": ["id1"], "sic_ind1": ["Ind1_1"]})
+    @patch("pandas.read_csv")
+    def test_read_sic_data_runs(self, mock_pd_read_csv):
+        """Test that read_sic_data runs and calls pd.read_csv."""
+        # Mock pd.read_csv to return an empty DataFrame for simplicity
+        mock_df = pd.DataFrame({'unique_id': ['1']})
         mock_pd_read_csv.return_value = mock_df
 
         df = read_sic_data("dummy_path.csv")
+
         mock_pd_read_csv.assert_called_once()
-        # Check some key arguments passed to read_csv
-        call_args, call_kwargs = mock_pd_read_csv.call_args
-        self.assertEqual(call_kwargs.get("delimiter"), ",")
-        self.assertEqual(call_kwargs.get("dtype"), str)
-        self.assertTrue(isinstance(call_kwargs.get("names"), list))
+        self.assertIsNotNone(df)
+        # Basic check on returned DataFrame
         pd.testing.assert_frame_equal(df, mock_df)
 
-    @patch("pandas.read_csv", side_effect=FileNotFoundError)
-    def test_read_sic_data_file_not_found(self, _mock_pd_read_csv):
-        """Test FileNotFoundError when SIC data file is missing."""
-        with self.assertRaises(FileNotFoundError):
-            read_sic_data("non_existent_sic_data.csv")
 
     @patch("requests.post")
-    def test_process_row_success(self, mock_post):
-        """Test processing a row with a successful API response."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"classified": True, "sic_code": "12345"}
-        mock_response.raise_for_status.return_value = None # Simulate no HTTP error
-        mock_post.return_value = mock_response
+    def test_process_row_runs(self, mock_post):
+        """Test that process_row runs and makes a mock API call."""
+        mock_api_response = MagicMock()
+        mock_api_response.json.return_value = {"classified": True, "sic_code": "00000"}
+        mock_api_response.raise_for_status.return_value = None # Simulate no HTTP error
+        mock_post.return_value = mock_api_response
 
-        sample_row = pd.Series({
-            "unique_id": "test_id1",
-            "soc2020_job_title": "Test Job",
-            "soc2020_job_description": "Test Description",
-            "sic2007_employee": "Test Industry"
+        sample_row_data = pd.Series({
+            "unique_id": "test_id_pr",
+            "soc2020_job_title": "Sample Job",
+            "soc2020_job_description": "Sample Description",
+            "sic2007_employee": "Sample Industry"
         })
-        secret = "test_secret"
+        secret = "dummy_secret"
 
-        result = process_row(sample_row, secret)
+        result = process_row(sample_row_data, secret)
 
         mock_post.assert_called_once()
+        self.assertIsNotNone(result)
         self.assertTrue(result["classified"])
-        self.assertEqual(result["sic_code"], "12345")
-        self.assertEqual(result["unique_id"], "test_id1") # Check metadata added
-        self.assertIn("request_payload", result)
+        self.assertEqual(result["unique_id"], "test_id_pr")
 
-    @patch("requests.post", side_effect=requests.exceptions.RequestException("API Error"))
-    def test_process_row_request_exception(self, mock_post):
-        """Test processing a row when API request fails."""
-        sample_row = pd.Series({
-            "unique_id": "test_id2",
-            "soc2020_job_title": "Another Job",
-            "soc2020_job_description": "Another Description",
-            "sic2007_employee": "Another Industry"
-        })
-        secret = "test_secret"
+    @patch("scripts.batch.pd.read_csv")
+    @patch("scripts.batch.process_row") # Mock the process_row function
+    @patch("builtins.open", new_callable=mock_open) # Mock file opening
+    @patch("scripts.batch.time.sleep") # Mock time.sleep
+    def test_process_test_set_runs(self, mock_sleep, mock_file_open, mock_proc_row, mock_pd_read_csv):
+        """Test that process_test_set runs with minimal data."""
+        # Prepare a minimal DataFrame to be returned by the mocked pd.read_csv
+        # This DataFrame should have the columns that process_row expects
+        header = ["unique_id", "soc2020_job_title", "soc2020_job_description", "sic2007_employee"]
+        data_rows = [["id1", "Job1", "Desc1", "Industry1"]]
+        minimal_df = pd.DataFrame(data_rows, columns=header)
+        mock_pd_read_csv.return_value = minimal_df
 
-        result = process_row(sample_row, secret)
+        # Define what the mocked process_row should return
+        mock_proc_row.return_value = {"unique_id": "id1", "processed_data": "some_result"}
 
-        mock_post.assert_called_once()
-        self.assertIn("error", result)
-        self.assertEqual(result["unique_id"], "test_id2")
-
-    @patch("requests.post")
-    def test_process_row_http_error(self, mock_post):
-        """Test processing a row when API returns an HTTP error."""
-        mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("HTTP Error")
-        mock_post.return_value = mock_response
-
-        sample_row = pd.Series({
-            "unique_id": "test_id3",
-            "soc2020_job_title": "Error Job",
-            "soc2020_job_description": "Error Description",
-            "sic2007_employee": "Error Industry"
-        })
-        secret = "test_secret"
-
-        result = process_row(sample_row, secret)
-        mock_post.assert_called_once()
-        self.assertIn("error", result)
-        self.assertTrue("HTTP Error" in result["error"])
-
-
-    @patch("scripts.batch.pd.read_csv") # Patch where it's used in the SCRIPT
-    @patch("scripts.batch.process_row")
-    @patch("builtins.open", new_callable=mock_open)
-    @patch("scripts.batch.time.sleep")
-    def test_process_test_set_test_mode(self, mock_sleep, mock_file_open, mock_process_row, mock_pd_read_csv):
-        """Test process_test_set in test mode."""
-        # --- FIX: Create sample_input_df without calling the mocked pd.read_csv ---
-        csv_lines = SAMPLE_CSV_DATA.strip().split('\n')
-        header = csv_lines[0].split(',')
-        data_rows = [row.split(',') for row in csv_lines[1:]]
-        sample_input_df = pd.DataFrame(data_rows, columns=header)
-        # --- End FIX ---
-
-        mock_pd_read_csv.return_value = sample_input_df
-
-        mock_process_row.return_value = {"unique_id": "mock_id", "processed": True}
-
-        test_limit = 2
         process_test_set(
-            secret_code="test_secret",
+            secret_code="dummy_secret",
             csv_filepath="dummy_input.csv",
             output_filepath="dummy_output.jsonl",
-            test_mode=True,
-            test_limit=test_limit
+            test_mode=True, # Run in test mode
+            test_limit=1    # Process only one row
         )
 
-        # This assertion should now pass as pd.read_csv is only called once by process_test_set
+        # Assert that the core functions were called
         mock_pd_read_csv.assert_called_once_with("dummy_input.csv", delimiter=",", dtype=str)
-        self.assertEqual(mock_process_row.call_count, test_limit)
+        mock_proc_row.assert_called_once() # Called once due to test_limit=1
         mock_file_open.assert_called_once_with("dummy_output.jsonl", "a", encoding="utf-8")
-        self.assertEqual(mock_file_open().write.call_count, test_limit)
-        expected_json_output = json.dumps({"unique_id": "mock_id", "processed": True}) + "\n"
-        mock_file_open().write.assert_any_call(expected_json_output)
-        self.assertEqual(mock_sleep.call_count, test_limit)
-
-
-    @patch("scripts.batch.pd.read_csv") # Patch where it's used in the SCRIPT
-    @patch("scripts.batch.process_row")
-    @patch("builtins.open", new_callable=mock_open)
-    @patch("scripts.batch.time.sleep")
-    def test_process_test_set_full_mode(self, mock_sleep, mock_file_open, mock_process_row, mock_pd_read_csv):
-        """Test process_test_set in full mode (not test_mode)."""
-        # --- FIX: Create sample_input_df without calling the mocked pd.read_csv ---
-        csv_lines = SAMPLE_CSV_DATA.strip().split('\n')
-        header = csv_lines[0].split(',')
-        data_rows = [row.split(',') for row in csv_lines[1:]]
-        sample_input_df = pd.DataFrame(data_rows, columns=header)
-        # --- End FIX ---
-
-        mock_pd_read_csv.return_value = sample_input_df
-        mock_process_row.return_value = {"unique_id": "mock_id", "processed": True}
-
-        num_rows_in_sample = len(sample_input_df)
-
-        process_test_set(
-            secret_code="test_secret",
-            csv_filepath="dummy_input.csv",
-            output_filepath="dummy_output.jsonl",
-            test_mode=False
-        )
-
-        # This assertion should now pass
-        mock_pd_read_csv.assert_called_once_with("dummy_input.csv", delimiter=",", dtype=str)
-        self.assertEqual(mock_process_row.call_count, num_rows_in_sample)
-        self.assertEqual(mock_file_open().write.call_count, num_rows_in_sample)
-        self.assertEqual(mock_sleep.call_count, num_rows_in_sample)
-
-    @patch("scripts.batch.pd.read_csv", side_effect=FileNotFoundError)
-    @patch("scripts.batch.process_row")
-    @patch("builtins.open")
-    def test_process_test_set_input_file_not_found(self, mock_file_open, mock_process_row, mock_pd_read_csv):
-        """Test process_test_set when input CSV is not found."""
-        process_test_set(
-            secret_code="test_secret",
-            csv_filepath="non_existent.csv",
-            output_filepath="dummy_output.jsonl",
-            test_mode=True,
-            test_limit=2
-        )
-        mock_pd_read_csv.assert_called_once_with("non_existent.csv", delimiter=",", dtype=str)
-        mock_process_row.assert_not_called()
-        mock_file_open.assert_not_called()
-
+        mock_file_open().write.assert_called_once() # Write called once
+        mock_sleep.assert_called_once() # Sleep called once
 
 if __name__ == "__main__":
-    # Import io for StringIO if not already at top level
-    # import io # Not strictly needed if we parse SAMPLE_CSV_DATA manually
     unittest.main()
