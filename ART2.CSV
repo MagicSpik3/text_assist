@@ -1,0 +1,22 @@
+unique_id,sic_section,sic2007_employee,sic2007_self_employed,sic_ind1,sic_ind2,sic_ind3,sic_ind_code_flag,soc2020_job_title,soc2020_
+job_description,sic_ind_occ1,sic_ind_occ2,sic_ind_occ3,sic_ind_occ_flag
+ID001,A,Company A,Self A,11111,22222,33333,KB,Job Title A,Job Desc A,12345,,NA,CC
+ID002,B,Company B,Self B,44444,55555,,MC,Job Title B,Job Desc B,98765,NA,NA,KB
+ID003,C,Company C,Self C,66666,,,CC,Job Title C,Job Desc C,1234x,ALT001,,MC
+ID004,D,Company D,Self D,77777,88888,99999,KB,Job Title D,Job Desc D,543xx,NA,NA,CC
+ID005,E,Company E,Self E,12121,34343,56565,MC,Job Title E,Job Desc E,98xxx,,NA,KB
+ID006,F,Company F,Self F,78787,90909,12121,CC,Job Title F,Job Desc F,1xxxx,ALT002,ALT003,MC
+ID007,G,Company G,Self G,32323,45454,67676,KB,Job Title G,Job Desc G,abcde,NA,NA,CC
+ID008,H,Company H,Self H,98989,76767,54545,MC,Job Title H,Job Desc H,1234,ALT004,,KB
+ID009,I,Company I,Self I,10101,29292,38383,CC,Job Title I,Job Desc I,1234xX,,NA,MC
+ID010,J,Company J,Self J,47474,56565,65656,KB,Job Title J,Job Desc J,1234Z,NA,NA,CC
+ID011,K,Company K,Self K,73737,82828,91919,MC,Job Title K,Job Desc K,,ALT005,ALT006,KB
+ID012,L,Company L,Self L,19191,28282,37373,CC,Job Title L,Job Desc L,55555,NA,NA,MC
+ID013,M,Company M,Self M,46464,53535,62626,KB,Job Title M,Job Desc M,6666x,77777,,CC
+ID014,N,Company N,Self N,72727,81818,90909,MC,Job Title N,Job Desc N,77xxx,NA,NA,KB
+ID015,O,Company O,Self O,18181,27272,36363,CC,Job Title O,Job Desc O,8xxxx,99999,0,MC
+ID016,P,Company P,Self P,45454,52525,61616,KB,Job Title P,Job Desc P,xxxxx,NA,NA,CC
+ID017,Q,Company Q,Self Q,71717,80808,89898,MC,Job Title Q,Job Desc Q,123,ALT007,ALT008,KB
+ID018,R,Company R,Self R,17171,26262,35353,CC,Job Title R,Job Desc R,12345,NA,ALT009,MC
+ID019,S,Company S,Self S,43434,51515,60606,KB,Job Title S,Job Desc S,NA,NA,NA,CC
+ID020,T,Company T,Self T,70707,79797,88888,MC,Job Title T,Job Desc T,99999,ALT010,NA,KB
