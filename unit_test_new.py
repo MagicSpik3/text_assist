@@ -108,4 +108,23 @@ def test_preprocessor_end_to_end(mock_config_and_data):
     # ASSERT: Check if the output is correct
     
     # 1. Shape Assertion: Should only have 1 final record (id_001) after deduplication
-    assert
+    assert result_df.shape[0] == 1, "Should have dropped the duplicate unique_id"
+    
+    # 2. Correct File Processing Assertion
+    assert "id_002" not in result_df["unique_id"].values, "Should not have processed the old file"
+    
+    # 3. Flattening and Renaming Assertions
+    assert "chosen_sic_code" in result_df.columns
+    assert result_df.iloc[0]["chosen_sic_code"] == "1111"
+    
+    # 4. Candidate Unstacking Assertions
+    # Check that candidate 1's columns were created and have the right data
+    assert "candidate_sic_code_1" in result_df.columns
+    assert result_df.iloc[0]["candidate_sic_code_1"] == "1111"
+    
+    # Check that candidate 2's columns were created and have the right data
+    assert "candidate_sic_descriptive_2" in result_df.columns
+    assert result_df.iloc[0]["candidate_sic_descriptive_2"] == "Desc 2"
+    
+    # Check that a column for a non-existent 3rd candidate was NOT created
+    assert "candidate_sic_code_3" not in result_df.columns
