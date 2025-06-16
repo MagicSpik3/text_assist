@@ -27,7 +27,7 @@ class JsonPreprocessor:
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Loads configuration settings from a .toml file."""
         try:
-            with open(config_path, "rb") as file:  # Open in binary mode for tomllib
+            with open(config_path, "rb") as file:
                 return tomllib.load(file)
         except FileNotFoundError:
             logging.error("Configuration file not found at '%s'", config_path)
@@ -73,7 +73,10 @@ class JsonPreprocessor:
 
         all_dfs = [self.flatten_json_to_df(path) for path in filepaths]
         
-        if not any(not df.empty for df in all_dfs):
+        # Filter out empty dataframes that may result from processing errors
+        all_dfs = [df for df in all_dfs if not df.empty]
+
+        if not all_dfs:
             return pd.DataFrame()
 
         combined_df = pd.concat(all_dfs, ignore_index=True)
@@ -86,17 +89,18 @@ class JsonPreprocessor:
         return combined_df
 
     def flatten_json_to_df(self, file_path: str) -> pd.DataFrame:
-        """Reads and flattens a single JSON file using pandas.json_normalize."""
+        """Reads and flattens a single JSON data file using pandas.json_normalize."""
         keys = self.config["json_keys"]
-        # TOML automatically parses numbers, so no need for int() cast
         max_candidates = self.config["parameters"]["max_candidates"]
 
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
-                data = tomllib.load(f) if file_path.endswith(".toml") else json.load(f)
-
-        except (FileNotFoundError, json.JSONDecodeError, tomllib.TOMLDecodeError) as e:
-            logging.error("Could not read or parse %s: %s", file_path, e)
+                # --- THIS IS THE CORRECTED LINE ---
+                # This method should ONLY ever load JSON.
+                data = json.load(f)
+        # --- The except block is also corrected to only handle JSON errors ---
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logging.error("Could not read or parse JSON from %s: %s", file_path, e)
             return pd.DataFrame()
 
         if isinstance(data, dict):
@@ -133,7 +137,6 @@ class JsonPreprocessor:
 
 
 if __name__ == "__main__":
-    # The main execution block remains clean and clear
     CONFIG_PATH = "config.toml"
     
     preprocessor = JsonPreprocessor(config_path=CONFIG_PATH)
