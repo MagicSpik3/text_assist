@@ -1,0 +1,27 @@
+# This file defines a single, traceable evaluation run.
+
+[experiment]
+id = "prompt_v2_on_q3_data"
+description = "Testing the new v2 summary prompt against the Q3 2025 human-coded dataset."
+
+[input]
+# The source dataset for this run
+dataset_uri = "gs://<your_bucket_location>/datasets/human_coded_q3_2025.csv"
+
+[process]
+# The specific Docker image that contains the LLM and prompt logic
+docker_image = "gcr.io/my-project/survey-assist-processor:1.2.0-prompt-v2"
+
+[output]
+# The GCS bucket where the raw JSON output will be stored
+gcs_bucket_name = "<your_bucket_location>"
+gcs_prefix = "experiment_outputs/"
+# The local path to save the final, merged CSV for the evaluation module
+final_evaluation_csv = "/home/user/survey-assist-utils/data/evaluation_data/results_prompt_v2_on_q3_data.csv"
+
+[metadata]
+# Additional key-value pairs to associate with the run
+llm_model_name = "gemini-1.5-pro-latest"
+prompt_id = "v2-summary"
+temperature = 0.5
+triggered_by = "user_email@example.com"
