@@ -1,0 +1,51 @@
+Of course. Here are the two documents drafted in a simple, to-the-point style suitable for a professional development environment.
+
+---
+
+### **Ticket Draft (Jira / GitHub Issues)**
+
+**Title:** Implement Experiment Tracking and Orchestration for Evaluation Runs
+
+**User Story:**
+
+As a **Data Scientist**, I want to **systematically run and track evaluation experiments** using a configuration file, so that I can **reliably compare the performance of different models or prompts and maintain a reproducible audit trail for each test.**
+
+**Definition of Done:**
+
+* [ ] An experiment can be fully defined in a single `.toml` configuration file (`experiment.toml`). This file must specify the input dataset URI, processing parameters, and output locations.
+* [ ] A new orchestrator script (`run_experiment.py`) is created that reads the experiment config file.
+* [ ] The orchestrator triggers the data processing (e.g., the Docker container run).
+* [ ] The raw LLM output (JSON) is saved to a GCS location with a filename derived from the unique `experiment_id` for clear traceability.
+* [ ] After the run, the orchestrator automatically fetches the correct input and output data, flattens the JSON, and merges them into a single CSV.
+* [ ] The final, merged CSV is saved to a local path specified in the experiment config, ready for use by the evaluation module.
+* [ ] A metadata file (a copy of the experiment config) is saved alongside the final CSV as a "receipt" for the run.
+
+---
+
+### **Pull Request (PR) Draft**
+
+**Title:** Feat: Add ExperimentRunner for Orchestrating Evaluation Pipelines
+
+**Description:**
+
+This PR introduces a new metadata-driven workflow for running evaluation tests. It replaces the previous manual process with a structured system where each test run is defined by a configuration file. This ensures all tests are traceable and reproducible.
+
+**Key Changes:**
+
+* **New `ExperimentRunner` Class:** Added `run_experiment.py`, which reads an `experiment.toml` file to orchestrate the entire pipeline: triggering the run, processing the output, and merging the data.
+* **New `experiment.toml` File:** Users now define a test run in this file, specifying the input dataset, model config, and output paths.
+* **Refactored `JsonFlattener`:** The old `JsonPreprocessor` has been refactored into a more focused `JsonFlattener` utility class in `preprocessor.py`. Its sole responsibility is now to flatten JSON data.
+* **Automated Data Preparation:** The runner automatically downloads the source data and the LLM's JSON output, merges them, and saves a final CSV ready for analysis.
+* **Metadata Receipt:** A `_metadata.json` file is now saved alongside the final CSV, providing a complete and permanent record of the experiment's configuration.
+
+**How to Use / Test:**
+
+1.  Create an `experiment.toml` file defining the input dataset and parameters for your test run.
+2.  Execute the runner from the command line: `python run_experiment.py`
+3.  Verify that two files are created in the specified output path:
+    * The final merged CSV (e.g., `my_experiment_results.csv`).
+    * The metadata receipt (e.g., `my_experiment_results_metadata.json`).
+
+**Related Ticket:**
+
+* Closes #TICKET-123
