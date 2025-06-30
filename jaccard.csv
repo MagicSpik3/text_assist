@@ -1,0 +1,6 @@
+unique_id,sic_ind_occ1,sic_ind_occ2,sic_ind_occ3,candidate_1_sic_code,candidate_2_sic_code,candidate_3_sic_code,candidate_4_sic_code,candidate_5_sic_code
+test_001,11111,22222,,11111,22222,,,
+test_002,33333,44444,,33333,55555,66666,,
+test_003,77777,,,88888,99999,,,
+test_004,12345,,,12345,,,,
+test_005,10101,20202,30303,10101,20202,40404,50505,
