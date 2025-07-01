@@ -1,0 +1,45 @@
+Level	Section C (Manufacturing)	Section P (Education)
+Divisions	24	1
+Groups (Children)	99	6
+Classes (Grandchildren)	234	10
+Sub-classes (Leaves)	304	12
+
+To clarify the terminology:
+
+    Section: The highest level (e.g., C - Manufacturing).
+
+    Division (2-digit): The main categories within a Section.
+
+    Group (3-digit): The "children" of a Division.
+
+    Class (4-digit): The "grandchildren" of a Division.
+
+    Sub-class (5-digit): The final, most detailed "leaves" of the hierarchy.
+
+Section C: Manufacturing
+
+This is by far the largest and most detailed section in the entire SIC classification system. Its complexity reflects the vast diversity of products and industrial processes.
+
+    Divisions (2-digit): 24
+
+        It spans from Division 10 (Manufacture of food products) through to Division 33 (Repair and installation of machinery and equipment).
+
+    Groups (3-digit children): 99
+
+    Classes (4-digit grandchildren): 234
+
+    Sub-classes (5-digit leaves): 304
+
+Section P: Education
+
+This section is much simpler and more focused. Its structure is based on the level of education provided rather than a wide variety of outputs.
+
+    Divisions (2-digit): 1
+
+        It consists solely of Division 85 (Education).
+
+    Groups (3-digit children): 6
+
+    Classes (4-digit grandchildren): 10
+
+    Sub-classes (5-digit leaves): 12
