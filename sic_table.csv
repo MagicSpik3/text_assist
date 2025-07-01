@@ -1,0 +1,22 @@
+Section_Letter,Section_Description,Divisions,Groups,Classes,Sub-classes
+A,Agriculture, Forestry and Fishing,3,13,39,41
+B,Mining and Quarrying,5,10,15,17
+C,Manufacturing,24,99,234,304
+D,Electricity, gas, steam and air conditioning supply,1,3,8,8
+E,"Water supply; sewerage, waste management and remediation activities",4,6,9,9
+F,Construction,3,9,22,28
+G,"Wholesale and retail trade; repair of motor vehicles and motorcycles",3,18,41,62
+H,Transportation and storage,4,11,18,23
+I,Accommodation and food service activities,2,4,10,14
+J,Information and communication,6,14,24,29
+K,Financial and insurance activities,3,7,14,21
+L,Real estate activities,1,4,7,7
+M,Professional, scientific and technical activities,7,21,40,46
+N,Administrative and support service activities,6,17,29,39
+O,"Public administration and defence; compulsory social security",1,3,3,3
+P,Education,1,6,10,12
+Q,Human health and social work activities,3,10,19,21
+R,Arts, entertainment and recreation,4,10,16,19
+S,Other service activities,3,8,16,21
+T,"Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use",2,2,2,2
+U,Activities of extraterritorial organisations and bodies,1,1,1,1
