@@ -5,7 +5,7 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,9 +17,9 @@ import toml
 @dataclass
 class ColumnConfig:
     """A data structure to hold the name configurations for the analysis."""
-    model_label_cols: List[str]
-    model_score_cols: List[str]
-    clerical_label_cols: List[str]
+    model_label_cols: list[str]
+    model_score_cols: list[str]
+    clerical_label_cols: list[str]
     id_col: str = "id"
     filter_unambiguous: bool = False
 
@@ -91,7 +91,7 @@ class LabelAccuracy:
             df[col] = df[col].apply(self._safe_zfill)
         return df
 
-    def _melt_and_clean(self, value_vars: List[str], value_name: str) -> pd.DataFrame:
+    def _melt_and_clean(self, value_vars: list[str], value_name: str) -> pd.DataFrame:
         """Helper to reshape data from wide to long and drop any remaining NaNs."""
         melted_df = self.df.melt(
             id_vars=[self.id_col], value_vars=value_vars, value_name=value_name
@@ -177,7 +177,7 @@ class LabelAccuracy:
         jaccard_scores = self.df.apply(calculate_jaccard_for_row, axis=1)
         return round(jaccard_scores.mean() * 100, 2)
 
-    def get_candidate_contribution(self, candidate_col: str) -> Dict[str, Any]:
+    def get_candidate_contribution(self, candidate_col: str) -> dict[str, Any]:
         """Assesses the value add of a single candidate column."""
         primary_clerical_col = self.clerical_label_cols[0]
         required_cols = [candidate_col, primary_clerical_col] + self.clerical_label_cols
@@ -324,4 +324,6 @@ def test_plot_confusion_heatmap(sample_data_and_config, monkeypatch):
         )
     except Exception as e:
         pytest.fail(f"plot_confusion_heatmap raised an exception: {e}")
+
+
 
