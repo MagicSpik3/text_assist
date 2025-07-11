@@ -1,0 +1,61 @@
+PR Description: Coder Alignment Evaluation Framework
+
+Title: Feat: Introduce Coder Alignment Evaluation Framework
+Context: The "Why"
+
+Currently, evaluating the performance of our Survey Assist (SA) models against the ground truth provided by Clerical Coders (CC) is a manual and time-consuming process. To make informed, data-driven decisions about model deployment and improvement, we need a standardised, robust, and reusable way to measure its accuracy and alignment.
+
+This PR introduces a comprehensive evaluation framework designed to solve this problem. It provides a suite of tools to move our model assessment from ad-hoc analysis to a repeatable, auditable, and insightful process.
+Description of Changes: The "What"
+
+This work introduces two main components:
+
+    survey-assist-utils Library: A new shared library containing common, reusable functionality for:
+
+        Parsing various spreadsheet formats (file_helpers.py).
+
+        Interacting with the Gemini API (gemini_client.py).
+
+        Managing configuration (config_manager.py).
+
+    coder_alignment.py Module: The core evaluation engine.
+
+        A LabelAccuracy class that takes raw model and clerical data and performs a full suite of analyses.
+
+        Includes methods for data cleaning, calculating accuracy, coverage, Jaccard similarity, and analysing the contribution of individual model predictions.
+
+        Adds powerful visualisation tools to generate confusion matrices and threshold curves.
+
+Unit tests, test data, and example scripts are included to ensure correctness and demonstrate usage.
+The Value Proposition: The "So What?" and "Who Cares?"
+
+This framework provides significant value to several key stakeholders by answering critical business questions:
+
+1. For Data Scientists & Analysts ("Is the model any good?"):
+
+    So What? It provides a powerful, reusable toolkit that standardises our evaluation process. Instead of writing boilerplate analysis code for every model run, we can now get a rich set of metrics with a few lines of code. The inclusion of Jaccard Similarity is crucial for our multi-label problem, giving us a more nuanced view of performance than simple accuracy alone.
+
+    Who Cares? The data science team. This will dramatically accelerate our model iteration cycle and improve the quality of our analysis.
+
+2. For Project & Product Managers ("Can we trust this AI?"):
+
+    So What? This framework delivers the key metrics needed to make go/no-go decisions. The plot_threshold_curves method is particularly important, as it allows us to visually determine the optimal confidence threshold to balance accuracy vs. coverage. This directly informs our strategy for how much of the coding process we can safely automate.
+
+    Who Cares? The G7s and G6s managing the Survey Assist project. They can now receive clear, data-driven reports to justify deployment decisions and track performance over time.
+
+3. For Senior Leadership & External Stakeholders ("How do we know it works?"):
+
+    So What? The ability to generate clear visualisations (plot_confusion_heatmap) and summary reports (get_summary_stats, save_output) makes the AI's performance understandable to a non-technical audience. It creates a transparent and auditable trail of evidence for our model's effectiveness.
+
+    Who Cares? The DD, oversight committees, and anyone who needs to understand the impact and reliability of our investment in AI.
+
+In short, this work provides the foundational tools necessary to properly measure, understand, and communicate the performance of our Survey Assist AI, enabling us to move forward with confidence.
+How to Test
+
+    Check out this branch.
+
+    Run poetry install to create the virtual environment and install dependencies.
+
+    Run the unit tests with poetry run pytest. All tests should pass.
+
+    To see a practical example, run the example_usage.py script located in the /examples directory. This will process the sample test data and generate output plots and JSON results in the /data/outputs folder.
